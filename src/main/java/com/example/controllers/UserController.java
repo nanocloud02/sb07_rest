@@ -1,22 +1,23 @@
 package com.example.controllers;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.models.User;
+import com.example.entities.User;
 import com.example.services.UserService;
+
+import io.micrometer.core.annotation.Timed;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 @RestController
 @RequestMapping("/users")
@@ -29,37 +30,37 @@ public class UserController {
 //	public ResponseEntity<List<User>> getUsers() {
 //		return new ResponseEntity<List<User>>(userService.getUsers(), HttpStatus.OK);
 //	}
-	
+
 	@GetMapping
-	//public ResponseEntity<List<User>> getUsers(@RequestParam("startWith") String startWith) {
-	public ResponseEntity<List<User>> getUsers(@RequestParam(value = "startWith", required = false) String startWith) {
-		return new ResponseEntity<List<User>>(userService.getUsers(startWith), HttpStatus.OK);
-	}
-	
-	@GetMapping("/db")
-	public ResponseEntity<List<com.example.entities.User>> getUsersDb() {
-		return new ResponseEntity<List<com.example.entities.User>>(userService.getUsersDB(), HttpStatus.OK);
+	@Timed(value = "get.users")
+	public ResponseEntity<Page<User>> getUsers(Pageable pageable) {
+		return new ResponseEntity<>(userService.getUsers(pageable), HttpStatus.OK);
 	}
 
-	@GetMapping(value = "/{username}")
-	public ResponseEntity<User> getUserByUsername(@PathVariable("username") String username) {
-		return new ResponseEntity<User>(userService.getUserByUserName(username), HttpStatus.OK);
+//	@GetMapping("/username")
+//	@ApiOperation(value = "View a list of usersnames", response = Page.class)
+//	@ApiResponses(value = {
+//			@ApiResponse(code = 200, message = "Successfully retrieved list"),
+//			@ApiResponse(code = 400, message = "The records was not found"),
+//	})
+//	public ResponseEntity<Page<String>> getUsername(Pageable pageable) {
+//		return new ResponseEntity<>(userService.getUserNames(pageable), HttpStatus.OK);
+//	}
+
+	@GetMapping("/username/{username}")
+	public ResponseEntity<User> getUsername(@PathVariable("username") String username) {
+		return new ResponseEntity<>(userService.getUserByUsername(username), HttpStatus.OK);
 	}
 
-	@PostMapping
-	public ResponseEntity<User> createUser(@RequestBody User user) {
-		return new ResponseEntity<User>(userService.createUser(user), HttpStatus.CREATED);
+	@DeleteMapping("/username/{username}")
+	public ResponseEntity<Void> deleteUserByUsername(@PathVariable("username") String username) {
+		userService.deleteByUsername(username);
+		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
 
-	@PutMapping(value = "/{username}")
-	public ResponseEntity<User> updateUser(@PathVariable String username, @RequestBody User user) {
-		return new ResponseEntity<User>(userService.updateUser(username, user), HttpStatus.OK);
-	}
-
-	@DeleteMapping(value = "/{username}")
-	public ResponseEntity<Void> deleteUser(@PathVariable String username) {
-		userService.deleteUser(username);
-		return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
-	}
+//	@GetMapping("/userAndPassword")
+//	public ResponseEntity<Page<Object>> getUserAndPassword(Pageable pageable) {
+//		return new ResponseEntity<>(userService.getUserAndPassword(pageable), HttpStatus.OK);
+//	}
 
 }

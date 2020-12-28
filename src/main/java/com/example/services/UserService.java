@@ -1,78 +1,67 @@
 package com.example.services;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import javax.annotation.PostConstruct;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.example.models.User;
+import com.example.entities.User;
+import com.example.entities.UserPassword;
 import com.example.repositories.UserRepository;
-import com.github.javafaker.Faker;
 
 @Service
 public class UserService {
 
-	@Autowired
-	private Faker faker;
-	
+	private static final Logger log = LoggerFactory.getLogger(UserService.class);
+
 	@Autowired
 	private UserRepository userRepository;
 
-	private List<User> users = new ArrayList<>();
-
-	@PostConstruct
-	public void init() {
-		for (int i = 0; i < 100; i++) {
-			users.add(new User(faker.funnyName().name(), faker.name().username(), faker.dragonBall().character()));
-		}
-	}
-
 //	public List<User> getUsers() {
-//		return users;
+//		return userRepository.findAll();
 //	}
 
-	public List<User> getUsers(String startWith) {
-		if (startWith != null) {
-			return users.stream().filter(u -> u.getUsername().startsWith(startWith)).collect(Collectors.toList());
-		} else {
-			return users;
+	public Page<User> getUsers(Pageable pageable) {
+		return userRepository.findAll(pageable);
+	}
+
+	public Page<String> getUserNames(Pageable pageable) {
+		return userRepository.findAllUsername(pageable);
+	}
+
+//	public Page<Object> getUserAndPassword(Pageable pageable) {
+//		return userRepository.findAllUserAndPassword(pageable);
+//	}
+
+	public User getUserById(Integer userId) {
+		return userRepository.findById(userId).orElseThrow(
+				() -> new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("User %d not found", userId)));
+	}
+
+	@Cacheable("users")
+	public User getUserByUsername(String username) {
+		log.info("Getting user by username: {}", username);
+		try {
+			Thread.sleep(3000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
+		return userRepository.findByUsername(username).orElseThrow(
+				() -> new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("User %S not found", username)));
 	}
 	
-	public List<com.example.entities.User> getUsersDB() {
-		return userRepository.findAll();
-	}
-
-	public User getUserByUserName(String username) {
-		return users.stream().filter(u -> u.getUsername().equals(username)).findAny().orElseThrow(
-				() -> new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("User %s not found", username)));
-	}
-
-	public User createUser(User user) {
-		if (users.stream().anyMatch(u -> u.getUsername().equals(user.getUsername()))) {
-			throw new ResponseStatusException(HttpStatus.CONFLICT,
-					String.format("User %s already exists", user.getUsername()));
-		}
-		users.add(user);
-		return user;
-	}
-
-	public User updateUser(String username, User user) {
-		User userToBeUpdated = getUserByUserName(username);
-		userToBeUpdated.setNickName(user.getNickName());
-		userToBeUpdated.setPassword(user.getPassword());
-		return userToBeUpdated;
-	}
-
-	public void deleteUser(String username) {
-		User userByUserName = getUserByUserName(username);
-		users.remove(userByUserName);
+	@CacheEvict("users")	
+	public void deleteByUsername(String username) {
+		User user = getUserByUsername(username);
+		userRepository.delete(user);
 	}
 
 }

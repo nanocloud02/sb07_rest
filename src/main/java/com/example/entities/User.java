@@ -1,5 +1,7 @@
 package com.example.entities;
 
+import java.io.Serializable;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -11,22 +13,20 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "users")
-public class User {
-	
+public class User implements Serializable {
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id")
 	private Integer id;
-	
+
 	@Column(name = "username")
 	private String username;
-	
+
 	@Column(name = "password")
 	private String password;
 
-	@OneToOne
-	@JoinColumn(name = "profile_id", referencedColumnName = "id")
-	private Profile profile;
+	private static final long serialVersionUID = 1L;
 
 	public Integer getId() {
 		return id;
@@ -50,14 +50,6 @@ public class User {
 
 	public void setPassword(String password) {
 		this.password = password;
-	}
-
-	public Profile getProfile() {
-		return profile;
-	}
-
-	public void setProfile(Profile profile) {
-		this.profile = profile;
 	}
 
 	@Override

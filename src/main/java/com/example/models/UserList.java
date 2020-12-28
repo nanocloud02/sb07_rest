@@ -1,16 +1,16 @@
 package com.example.models;
 
-public class User {
+public class UserList {
 	
 	private String nickName;
 	private String username;
 	private String password;
 	
-	public User() {
+	public UserList() {
 		super();
 	}
 	
-	public User(String nickName, String username, String password) {
+	public UserList(String nickName, String username, String password) {
 		super();
 		this.nickName = nickName;
 		this.username = username;
