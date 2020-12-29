@@ -31,4 +31,10 @@ public class ProfileService {
 		}
 	}
 
+	public Profile getByUserIdAndProfileId(Integer userId, Integer profileId) {
+		return profileRepository.findByUserIdAndProfileId(userId, profileId)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+						String.format("Profile not found for userId %d and ProfileId %d", userId, profileId)));
+	}
+
 }
